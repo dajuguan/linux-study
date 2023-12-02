@@ -12,5 +12,5 @@ gcc dir.c `pkg-config --cflags --libs glib-2.0`
 
 ## 改写方同学的程序，使之很容易重现写入混乱；进一步增强上述程序，使之彻底避免写入混乱
 ```
-gcc main.c && ./a.out
+gcc concurrent_io.c && ./a.out
 ```
