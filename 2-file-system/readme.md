@@ -23,19 +23,19 @@ gcc concurrent_io.c && ./a.out
 - 无缓冲模式一个字符一个字符地写
 - 调用write系统调用，也会很容易出现错乱。
 
-## 使用flock修复上述bug
+### 使用flock修复上述bug
 ```
 gcc concurrent_io_fix.c && ./a.out
 ```
 
-## 通过伪终端驱动`bc`完成任意精度的四则表达式计算
+## 3.通过伪终端驱动`bc`完成任意精度的四则表达式计算
 
-## C
+### C
 ```
 gcc pts.c && ./a.out
 ```
 
-## python
+### python
 ```
 python3 pts.py
 ```
