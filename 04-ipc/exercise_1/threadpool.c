@@ -45,7 +45,7 @@ struct Task * dequeue() {
 }
 
 
-void pool_submit(void (*fn_pt)(void *p), void *param) {
+void pool_submit(FN_PT fn_pt, void *param) {
     pthread_mutex_lock(&pool->mutex);
     struct Task *t = (struct Task*) malloc(sizeof(struct Task));
     t->tid = tid;
@@ -61,13 +61,13 @@ void pool_submit(void (*fn_pt)(void *p), void *param) {
     
 }
 
-void pool_destroy(void) {
+void pool_destroy(char *path) {
     pthread_join(parent_t, NULL);
-    printf("all work is done!\n");
+    printf("All work is done!\nTotal file size in dir:%s is: %u bytes.\n", path, pool->count);
 }
 
-void execute(void (*fn_pt)(void *p), void *param) {
-    fn_pt(param);
+int execute(FN_PT fn_pt, void *param) {
+    return (* fn_pt)(param);
 }
 
 
@@ -75,6 +75,7 @@ void execute(void (*fn_pt)(void *p), void *param) {
 void *worker(void *param) {
     int thread_id = (int) param;
     int num_tasks = 0;
+    int count_in_thread = 0;
     printf("starting thread %u...\n", thread_id);
     while (1)
     {
@@ -82,15 +83,17 @@ void *worker(void *param) {
         pthread_mutex_lock(&pool->mutex);
         struct Task *t;
         t = dequeue();
+        pthread_mutex_unlock(&pool->mutex);
         if (t == NULL) {
-            pthread_mutex_unlock(&pool->mutex);
             break;
         } 
         printf("thread %u get task: %d\n", thread_id, num_tasks);
         ++num_tasks;
-        pthread_mutex_unlock(&pool->mutex);
-        execute(t->fn_pt, t->param);
+        count_in_thread += execute(t->fn_pt, t->param);
         sem_post(&pool->semaphore);
     }
+    pthread_mutex_lock(&pool->mutex);
+    pool->count += count_in_thread;
+    pthread_mutex_unlock(&pool->mutex);
     pthread_exit(0);
 }
