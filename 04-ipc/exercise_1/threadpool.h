@@ -12,13 +12,13 @@ void *worker(void *param);
 struct Task {
     int tid;
     void (*fn_pt)(void *p);
-    Task *next;
+    struct Task *next;
     void *param; 
 };
 
 struct ThreadPool {
-    Task *head;
-    Task *tail;
+    struct Task *head;
+    struct Task *tail;
     pthread_mutex_t mutex;
     sem_t semaphore;
 };
