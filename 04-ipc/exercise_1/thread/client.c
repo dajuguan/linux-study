@@ -10,18 +10,11 @@ struct Param {
     char *path;
 };
 
-int worker_fn(void *param) {
-    struct Param *p = (struct Param *)param;
-    int size = get_dir_size(p->path);
-    printf("path: %s, size: %u\n", p->path, size);
-    return size;
-}
-
-int get_dir_size(const char*pathname)
+float get_dir_size(const char*pathname)
 {
   struct stat s_buf;
   stat(pathname,&s_buf);
-  int size = 0;
+  float size = 0;
   if(S_ISDIR(s_buf.st_mode)) {
       struct dirent *entry;
       int parent_dir_len = strlen(pathname);
@@ -35,9 +28,16 @@ int get_dir_size(const char*pathname)
         size += get_dir_size(fullpath);
       }
   } else {
-    size += s_buf.st_size;
+    size += (float)s_buf.st_size;
   }
   return size;
+}
+
+float worker_fn(void *param) {
+    struct Param *p = (struct Param *)param;
+    float size = get_dir_size(p->path);
+    printf("path: %s, size: %f\n", p->path, size);
+    return size;
 }
 
 void submit_cal_dir_size_job(char *dirpath) {
@@ -49,6 +49,7 @@ void submit_cal_dir_size_job(char *dirpath) {
         exit(0);
     }
     int parent_dir_len = strlen(dirpath);
+    int count = 0;
     while ((entry = readdir(dir)) != NULL)
     {
         if (!(strcmp(entry->d_name,".") & strcmp(entry->d_name,".."))) {
@@ -60,15 +61,18 @@ void submit_cal_dir_size_job(char *dirpath) {
         p->path = fullpath;
         // submit job
         pool_submit(&worker_fn, p);
+        if (count >= 2) {
+          usleep(10);
+        }
+        count++;
     }
     closedir(dir);
 }
 
 int main() {
-    int thread_num = 2;
+    int thread_num = 8;
     pool_init(thread_num);
-
-    char dirpath[] = "/root/now/linux-study/04-ipc";
+    char dirpath[] = "/root/now/linux-study/";
     submit_cal_dir_size_job(&dirpath);
     pool_destroy(&dirpath);
 }

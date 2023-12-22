@@ -12,10 +12,14 @@ void pool_init(int num_threads) {
     pool = (struct ThreadPool*) malloc(sizeof(struct ThreadPool));
     pool->head = NULL;
     pool->tail = NULL;
+    pool->total_threads = num_threads;
+    // float *count = (float *)malloc(sizeof(float));
+    pool->count = 0;
     pthread_mutex_init(&pool->mutex, NULL);
-    sem_init(&pool->semaphore, 0, num_threads);
+    sem_init(&pool->semaphore, 0, 0);
+    pool->threads = (pthread_t *) malloc(num_threads * sizeof(pthread_t));
     for (int i=0; i < num_threads; i++){
-        pthread_create(&parent_t, NULL, worker, (void *)i);
+        pthread_create(&(pool->threads[i]), NULL, worker, (void *)i);
     }
 }
 
@@ -28,8 +32,6 @@ int enqueue(struct Task * t){
         pool->tail->next = t;
         pool->tail = t;
     }
-
-    sem_post(&pool->semaphore);
     return 0;
 }
 
@@ -56,17 +58,21 @@ void pool_submit(FN_PT fn_pt, void *param) {
     tid++;
 
     enqueue(t);
-
     pthread_mutex_unlock(&pool->mutex);
-    
+    sem_post(&pool->semaphore);
 }
 
 void pool_destroy(char *path) {
-    pthread_join(parent_t, NULL);
-    printf("All work is done!\nTotal file size in dir:%s is: %u bytes.\n", path, pool->count);
+    for (int i=0; i < pool->total_threads ; i++) {
+        sem_post(&pool->semaphore);
+    }
+    for (int i=0; i < pool->total_threads ; i++) {
+        pthread_join(pool->threads[i], NULL);
+    }
+    printf("All work is done!\nTotal file size in dir:%s is:%f\n", path, pool->count);
 }
 
-int execute(FN_PT fn_pt, void *param) {
+float execute(FN_PT fn_pt, void *param) {
     return (* fn_pt)(param);
 }
 
@@ -75,11 +81,13 @@ int execute(FN_PT fn_pt, void *param) {
 void *worker(void *param) {
     int thread_id = (int) param;
     int num_tasks = 0;
-    int count_in_thread = 0;
+    float count_in_thread = 0;
     printf("starting thread %u...\n", thread_id);
     while (1)
     {
+        printf("thread %u waiting===================>\n", thread_id);
         sem_wait(&pool->semaphore);
+        printf("thread %u executing------------------>\n", thread_id);
         pthread_mutex_lock(&pool->mutex);
         struct Task *t;
         t = dequeue();
@@ -90,10 +98,12 @@ void *worker(void *param) {
         printf("thread %u get task: %d\n", thread_id, num_tasks);
         ++num_tasks;
         count_in_thread += execute(t->fn_pt, t->param);
-        sem_post(&pool->semaphore);
+        // sem_post can't be put here, 
+        // because if job hasn't been submitted, then this process would be early stopped
     }
     pthread_mutex_lock(&pool->mutex);
     pool->count += count_in_thread;
     pthread_mutex_unlock(&pool->mutex);
+    printf("thread %u exits--------------->\n", thread_id);
     pthread_exit(0);
 }
