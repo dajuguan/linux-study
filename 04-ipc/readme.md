@@ -37,3 +37,10 @@ int socketpair(int domain, ..)
 ### Linux特有的
 memfd_create(), 基于文件描述符实现，可以用于select(), epoll()
 eventfd(), 多个进程、线程之间可以代替信号量，开销非常小，并且可以和select，epoll一起用。有数据马上就返回。
+
+## 进程和线程区别的
+线程多了个条件变量和单次函数。
+
+## Resources
+- https://github.com/Akagi201/linux-0.11/
+- https://github.com/Akagi201/tinnyhttpd/
