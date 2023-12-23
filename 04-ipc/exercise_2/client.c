@@ -6,24 +6,18 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #define UNIX_STREAM_PATH "/tmp/bc_unix_steam"
 
-#define MAXLINE 4096
-
-int send2server(int fd){
-
-}
+#define MAXLINE 1024
 
 int conn(){
     int ret;
     int conn_fd;
     pid_t child_pid;
-    socklen_t cliaddr_len;
     struct sockaddr_un serv_addr;
 
-    int n;
-    socklen_t len;
     char buf[MAXLINE];
     ssize_t num_read;
 
@@ -45,7 +39,6 @@ int conn(){
 
     child_pid = fork();
     if(child_pid == 0) { //child process for reading
-        memset(&buf, 0, MAXLINE*sizeof(char));
         while((num_read = read(conn_fd, &buf, MAXLINE)) > 0) {
             write(STDOUT_FILENO, &buf, num_read);
         }
@@ -59,6 +52,7 @@ int conn(){
         }
     }
 
+    waitpid(child_pid, NULL, 0);
 }
 
 int main() {
