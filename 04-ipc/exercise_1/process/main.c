@@ -1,4 +1,5 @@
 // 简单的生产者消费者模型
+// 使用共享内存 + 信号量
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
