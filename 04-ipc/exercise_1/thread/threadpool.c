@@ -64,10 +64,13 @@ void pool_submit(FN_PT fn_pt, void *param) {
 
 void pool_destroy(char *path) {
     for (int i=0; i < pool->total_threads ; i++) {
-        // 必须单独放在这里，否则线程join有可能会把这个信号丢掉；也可以采用类似于多进程的两个信号量来解决
+        // 必须单独放在这里，否则线程join有可能导致死锁；也可以采用类似于多进程的两个信号量来解决
         sem_post(&pool->semaphore);
     }
     for (int i=0; i < pool->total_threads ; i++) {
+        // sem_post(&pool->semaphore);
+        // 加入sem_post放在这里，这时候 第0个sem唤醒了thread[2]
+        // 由于for循环时同步的，同时thread[0]还被阻塞了,就会导致pthread_join一直wait第0个信号，产生了死锁。
         pthread_join(pool->threads[i], NULL);
     }
     printf("All work is done!\nTotal file size in dir:%s is:%f\n", path, pool->count);

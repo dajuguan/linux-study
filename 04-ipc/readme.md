@@ -1,3 +1,9 @@
+# 核心概念
+file descriptior只是个文件，不是文件流，**没有具体的读/写动作**，只有调用read,write的时候才会去读、写。
+因此stdin的`STDIN_NO`和pipe出来的两个fd都可以进行读写，stdin是流，但是这个流**可读可写**，不单单是读出来。
+`dup2(fd, STDIN_NO)`则只是把STDIN_NO替换为了fd，而不是把stdio的读流替换成了fd的读流，即实际上调用`read(STDIN_NO)`调用的是`read(fd)`,实际上也可以调用`write(STDIN_NO)`，此时则成为`write(STDIN_NO)`。
+
+所以对于`bc`程序内部有`rw`操作，直接dup2就可以了，但是自己的程序需要调用`rw`才能把`sockfd`给读、写出来，这步不可避免。
 
 # Homework
 ## Exercise 1
