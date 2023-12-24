@@ -76,3 +76,4 @@ eventfd(), 多个进程、线程之间可以代替信号量，开销非常小，
 ## Resources
 - https://github.com/Akagi201/linux-0.11/
 - https://github.com/Akagi201/tinnyhttpd/
+- [Linux编程基础2-进程间通信-管道](https://rdou.github.io/2020/06/21/Linux%E7%BC%96%E7%A8%8B%E5%9F%BA%E7%A1%802-%E8%BF%9B%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1-%E7%AE%A1%E9%81%93/)

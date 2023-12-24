@@ -12,6 +12,40 @@
 
 #define MAXLINE 1024
 
+int conn_2() {
+    int ret;
+    int conn_fd;
+    pid_t child_pid;
+    struct sockaddr_un serv_addr;
+
+    char buf[MAXLINE];
+    ssize_t num_read;
+
+    conn_fd = socket(AF_LOCAL, SOCK_STREAM, 0);
+    if (conn_fd < 0) {
+        printf("server socket error: %s\n", strerror(errno));
+        return -1;
+    }
+
+    bzero(&serv_addr, sizeof(serv_addr));
+    serv_addr.sun_family = AF_LOCAL;
+    strncpy(serv_addr.sun_path, UNIX_STREAM_PATH, sizeof(serv_addr.sun_path) - 1);
+
+    ret = connect(conn_fd, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
+    if (ret) {
+        printf("connect error: %s\n", strerror(errno));
+        return -1;
+    }
+
+    int conn_dup = dup(conn_fd);
+
+    dup2(STDIN_FILENO, conn_dup);
+    dup2(STDOUT_FILENO, conn_dup);
+    close(conn_dup);
+    while(1) {};
+    return 1;
+}
+
 int conn(){
     int ret;
     int conn_fd;
@@ -51,10 +85,9 @@ int conn(){
             }
         }
     }
-
-    waitpid(child_pid, NULL, 0);
 }
 
 int main() {
-    return conn();
+    // return conn();
+    return conn_2();
 }
