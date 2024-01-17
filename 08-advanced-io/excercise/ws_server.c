@@ -328,7 +328,7 @@ void accept_connections_through(int server_sockfd) {
 	}
 }
 
-int try_open_server_on_port(int port) {
+int try_open_server_on_port(int port) {`
 	
 	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
 
