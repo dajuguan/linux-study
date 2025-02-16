@@ -61,5 +61,25 @@ epoll_wait比较重要的是： EPOLLET默认为水平触发(level-trigger), 边
 - select缺点: 可监听的文件描述符最大为1023；返回后未产生事件的文件描述符对应的比特位会被清除，故而需要重新初始化fd_set
 - poll解决了select的缺点，但性能相对于epoll差点，因此后来都直接用epoll了
 
+## 阻塞、非阻塞和IO多路复用的区别
+假设都采用单线程来等待IO:
+- 阻塞:
+wait job 1, until receive data => do
+wait job 2
+- 非阻塞: 没数据立即返回，但是需要在用户态不断轮询job，且每次也只能轮询一个job有没有数据
+wait job 1, no data, return
+wait job2, has data, do
+wait job 1...
+wait job 2...
+- io多路复用: 内核可以同时轮询多个FD，并返回给用户
+wait job1, job2...
+    job1 has data =>do
+wait job1, job2..
+    job2 has data => do
+    job1 has data => do
+
+demo:
+- https://www.cnblogs.com/killianxu/p/11148522.html
+- 文中具体代码: https://github.com/killianxu/network_example
 ## 作业
 几十个客户端连上
